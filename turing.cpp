@@ -42,12 +42,18 @@ int TM::mult(const int& x, const int& y) {
     program = {
         {0, // current state
          TM::qCmd(this, // parent
-                  std::map<wchar_t, qCmd::Cmd>{ // commands on current state q
+                  std::map<wchar_t, qCmd::Cmd>{ // commands on current q state
                                                {'1', // current symbol
-                                                TM::qCmd::Cmd{'1', Action::R, 0} // command on current state and current symbol
+                                                TM::qCmd::Cmd{'1', // symbol to write
+                                                              Action::R, // action
+                                                              0 // next q state
+                                                             }
                                                },
                                                {'*', // current symbol
-                                                TM::qCmd::Cmd{'*', Action::E, 1} // command on current state and current symbol
+                                                TM::qCmd::Cmd{'*', // symbol to write
+                                                              Action::E, // action
+                                                              1 // next q state
+                                                             }
                                                },
                                               }
                  )
@@ -56,8 +62,7 @@ int TM::mult(const int& x, const int& y) {
     Error e = Error::NoError;
     while (e != Error::EndOfProgram) {
         std::wcout << program.at(state) << std::endl;
-        e = program[state].run();
-        std::wcout << program.at(state) << std::endl;
+        e = program[state].next();
     }
     return 0;
 }

@@ -10,10 +10,10 @@ typedef unsigned int q_;
 class TM {
     public:
         enum class Action {
-            N = 0,
-            R,
-            L,
-            E
+            N = 0, // Stay
+            R, // Move right
+            L, // Move left
+            E // End of program
         };
     private:
         std::vector<wchar_t> alphabet;
@@ -81,14 +81,15 @@ class TM {
                         ++itc;
                     }
                 }
-                Error run() {
+                Error next() {
                     if (parent == nullptr) {
                         return Error::NoError;
                     }
-                    if (cmds.find(currentSymbol()) == cmds.end()) {
+                    const wchar_t curSymb = currentSymbol();
+                    if (cmds.find(curSymb) == cmds.end()) {
                         return Error::NoError;
                     }
-                    const Cmd cmd = cmds.at(currentSymbol());
+                    const Cmd cmd = cmds.at(curSymb);
                     Error e = parent->writeSymbol(cmd.symbolToWrite);
                     if (e != Error::NoError) {
                         return e;
@@ -108,10 +109,11 @@ class TM {
                     return parent->tape.at(parent->position);
                 }
                 friend std::wostream& operator<<(std::wostream& os, const qCmd& dt) {
-                    if (dt.cmds.find(dt.currentSymbol()) == dt.cmds.end()) {
+                    const wchar_t curSymb = dt.currentSymbol();
+                    if (dt.cmds.find(curSymb) == dt.cmds.end()) {
                         return os;
                     }
-                    const Cmd cmd = dt.cmds.at(dt.currentSymbol());
+                    const Cmd cmd = dt.cmds.at(curSymb);
                     std::wstring qnum;
                     unsigned int temp = dt.currentState();
                     if (temp == 0) {
@@ -147,7 +149,7 @@ class TM {
                             action = 'E';
                             break;
                     }
-                    os << 'q' << qnum << dt.currentSymbol() << L"→q" << qnextnum << cmd.symbolToWrite << action;
+                    os << 'q' << qnum << curSymb << L" → q" << qnextnum << cmd.symbolToWrite << action;
                     return os;
                 }
                 qCmd(const qCmd& other) {
