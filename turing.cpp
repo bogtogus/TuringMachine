@@ -14,7 +14,7 @@ TuringMachine::~TuringMachine() {
 
 TuringMachine::Error TuringMachine::execute() {
     const wchar_t curSymb = tape.at(curPosition);
-    const qCmd::Cmd cmd = program.at(curState).getCmd(curSymb);
+    const Cmd cmd = program.at(curState).at(curSymb);
     if (cmd.symbolToWrite == '\0') {
         return Error::WrongChar;
     }
@@ -73,7 +73,7 @@ TuringMachine::Error TuringMachine::writeSymbol(const wchar_t& symb) {
 
 std::wstring TuringMachine::printNextCmd() const {
     const wchar_t curSymb = tape.at(curPosition);
-    const qCmd::Cmd cmd = program.at(curState).getCmd(curSymb);
+    const Cmd cmd = program.at(curState).at(curSymb);
     std::wstring qnum;
     unsigned int temp = curState;
     if (temp == 0) {
@@ -151,14 +151,14 @@ int TuringMachine::setProgram(const std::map<q_, qCmd>& prg) {
         return -1;
     }
     std::map<q_, qCmd>::const_iterator itprg = prg.cbegin();
-    std::map<wchar_t, TuringMachine::qCmd::Cmd>::const_iterator itcmd;
-    std::map<wchar_t, TuringMachine::qCmd::Cmd>::const_iterator itcmdend;
+    qCmd::const_iterator itcmd;
+    qCmd::const_iterator itcmdend;
     while (itprg != prg.cend()) {
         if (qstates.find(itprg->first) == qstates.end()) { // if command contains forbidden current state
             return -1;
         }
-        itcmd = itprg->second.getCmdBegin();
-        itcmdend = itprg->second.getCmdEnd();
+        itcmd = itprg->second.cbegin();
+        itcmdend = itprg->second.cend();
         while (itcmd != itcmdend) { // check program valid
             if (alphabet.find(itcmd->first) == alphabet.end()) { // if command contains forbidden current symbol
                 return -1;
@@ -221,50 +221,4 @@ int TuringMachine::run() {
     return 0;
 }
 
-
-/* ================================ */
-
-TuringMachine::qCmd::qCmd(const std::map<wchar_t, Cmd>& cs) {
-    std::map<wchar_t, Cmd>::const_iterator itc = cs.cbegin();
-    while (itc != cs.cend()) {
-        cmds.insert({itc->first, itc->second});
-        ++itc;
-    }
-}
-
-TuringMachine::qCmd::qCmd(const qCmd& other) {
-    this->cmds = other.cmds;
-}
-
-TuringMachine::qCmd& TuringMachine::qCmd::operator=(const TuringMachine::qCmd& other) {
-    this->cmds = other.cmds;
-    return *this;
-}
-
-TuringMachine::qCmd::qCmd(qCmd&& other) {
-    this->cmds = std::map(other.cmds);
-    other.cmds.clear();
-}
-
-TuringMachine::qCmd& TuringMachine::qCmd::operator=(qCmd&& other) {
-    this->cmds = std::map(other.cmds);
-    other.cmds.clear();
-    return *this;
-}
-
-TuringMachine::qCmd::Cmd TuringMachine::qCmd::getCmd(const wchar_t& symbol) const {
-    std::map<wchar_t, Cmd>::const_iterator cmdit = cmds.find(symbol);
-    if (cmdit == cmds.cend()) {
-        return Cmd{0,Action::N,0};
-    }
-    return cmdit->second;
-}
-
-const std::map<wchar_t, TuringMachine::qCmd::Cmd>::const_iterator TuringMachine::qCmd::getCmdBegin() const {
-    return cmds.cbegin();
-}
-
-const std::map<wchar_t, TuringMachine::qCmd::Cmd>::const_iterator TuringMachine::qCmd::getCmdEnd() const {
-    return cmds.cend();
-}
 

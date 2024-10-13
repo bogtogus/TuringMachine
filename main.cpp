@@ -5,8 +5,7 @@
 #include "turing.h"
 
 using TM = TuringMachine;
-using qCmd = TuringMachine::qCmd;
-using Cmd = TuringMachine::qCmd::Cmd;
+using Cmd = TuringMachine::Cmd;
 using Action = TuringMachine::Action;
 
 int main() {
@@ -23,18 +22,16 @@ int main() {
     std::map<q_, qCmd> program = {
     /*   qᵢaᵢ → aₓMqₓ   */
         {0, // current state qᵢ
-         qCmd( // set of commands for current state
-                std::map<wchar_t, Cmd>{ // commands on current q state
-                        /* aᵢ - current symbol; 
-                           aₓ - symbol to write; 
-                           M - action; 
-                           qₓ - next state.
+         qCmd{ // commands on current q state
+                 /* aᵢ - current symbol; 
+                    aₓ - symbol to write; 
+                    M - action; 
+                    qₓ - next state.
 
-                        { aᵢ,    { aₓ,         M, qₓ}}    */
-                        {'1', Cmd{'1', Action::R, 0 }},
-                        {'*', Cmd{'*', Action::E, 1 }},
-                }
-         )
+                 { aᵢ,    { aₓ,         M, qₓ}}    */
+                 {'1', Cmd{'1', Action::R, 0 }},
+                 {'*', Cmd{'*', Action::E, 1 }},
+         }
         },
     };
     if (tm.setProgram(program) != 0) {
