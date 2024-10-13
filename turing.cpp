@@ -79,7 +79,7 @@ TuringMachine::Error TuringMachine::writeSymbol(const wchar_t& symb) {
     return Error::NoError;
 }
 
-std::wstring TuringMachine::printNextCmd() const {
+std::wstring TuringMachine::viewNextCmd() const {
     const wchar_t curSymb = tape.at(curPosition);
     const qCmd qcmd = program.at(curState);
     if (qcmd.find(curSymb) == qcmd.end()) {
@@ -135,6 +135,49 @@ std::wstring TuringMachine::printNextCmd() const {
         output.push_back(tape.at(curPosition));
     }
     output.push_back(action);
+    return output;
+}
+
+std::wstring TuringMachine::viewTape() const {
+    std::wstring output;
+    int viewPos = 0;
+    int leftBorder = 0;
+    int rightBorder = 0;
+    while (viewPos < maxTapeSize && (tape.at(viewPos) == '\0' || tape.at(viewPos) == EMPTY)) {
+        ++viewPos;
+    }
+    leftBorder = viewPos;
+    
+    output.push_back(' ');
+    const size_t tapeSize = tape.size();
+    while (viewPos < tapeSize && tape.at(viewPos) != '\0' && tape.at(viewPos) != EMPTY) {
+        output.push_back(tape.at(viewPos));
+        ++viewPos;
+    }
+    if (viewPos < tapeSize && tape.at(viewPos) != '\0') {
+        output.push_back(tape.at(viewPos));
+        rightBorder = viewPos;
+    } else {
+        rightBorder = viewPos - 1;
+    }
+    output.append(L" \n");
+    if (curPosition >= leftBorder && curPosition <= rightBorder) {
+        int temp = curPosition - leftBorder + 1;
+        while (temp > 0) {
+            output.push_back(' ');
+            --temp;
+        }
+        output.push_back('^');
+    } else if (curPosition < leftBorder) {
+        output.push_back('<');
+    } else {
+        int temp = rightBorder - leftBorder + 2;
+        while (temp > 0) {
+            output.push_back(' ');
+            --temp;
+        }
+        output.push_back('>');
+    }
     return output;
 }
 
@@ -215,7 +258,7 @@ int TuringMachine::writeOnTape(const std::wstring& data) {
     }
     std::wstring::const_iterator itdata = data.cbegin();
     int writePos = curPosition;
-    int tapeSize = tape.size();
+    size_t tapeSize = tape.size();
     while(writePos < maxTapeSize && itdata != data.cend()) {
         if (writePos >= tapeSize && tapeSize < maxTapeSize) {
             tape.push_back(*itdata);
@@ -237,8 +280,10 @@ int TuringMachine::run() {
     }
     Error e = Error::NoError;
     while (e != Error::EndOfProgram) {
-        std::wcout << printNextCmd() << std::endl;
+        std::wcout << viewTape() << std::endl;
+        std::wcout << viewNextCmd() << std::endl;
         e = execute();
+        std::wcout << viewTape() << std::endl;
     }
     return 0;
 }

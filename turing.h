@@ -3,7 +3,6 @@
 #include <vector>
 #include <set>
 #include <map>
-#include <iostream>
 #include <string>
 
 #define EMPTY L'λ'
@@ -46,7 +45,8 @@ class TuringMachine {
         Error move(const Action& act);
         Error writeSymbol(const wchar_t& symb);
         Error execute();
-        std::wstring printNextCmd() const;
+        std::wstring viewNextCmd() const;
+        std::wstring viewTape() const;
     public:
         TuringMachine();
         ~TuringMachine();
