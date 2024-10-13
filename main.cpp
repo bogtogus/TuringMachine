@@ -12,7 +12,7 @@ int main() {
 
     std::locale utf8(std::locale(), new std::codecvt_utf8_utf16<wchar_t>);
     std::wcout.imbue(utf8);
-    TM tm;
+    TuringMachine tm;
     tm.mult(2,3);
     return 0;
 }

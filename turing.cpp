@@ -1,19 +1,34 @@
 #include "turing.h"
 #include <iostream>
 
-TM::TM() {
+TuringMachine::TuringMachine() {
     for (int i = 0; i < lineSize; i++) {
         tape.push_back(EMPTY);
     }
     alphabet.insert(alphabet.begin(), {'1', '*', 'A', 'B', EMPTY});
 }
 
-TM::~TM() {
+TuringMachine::~TuringMachine() {
     tape.clear();
     alphabet.clear();
 }
 
-void TM::resetTape() {
+TuringMachine::Error TuringMachine::next() {
+    const wchar_t curSymb = tape.at(position);
+    const qCmd::Cmd cmd = program.at(curState).getCmd(curSymb);
+    if (cmd.symbolToWrite == '\0') {
+        return Error::WrongChar;
+    }
+    Error e = writeSymbol(cmd.symbolToWrite);
+    if (e != Error::NoError) {
+        return e;
+    }
+    e = move(cmd.action);
+    curState = cmd.nextState;
+    return e;
+}
+
+void TuringMachine::resetTape() {
     std::vector<wchar_t>::iterator it = tape.begin();
     while (it != tape.end()) {
         *it = EMPTY;
@@ -21,7 +36,7 @@ void TM::resetTape() {
     }
 }
 
-int TM::mult(const int& x, const int& y) {
+int TuringMachine::mult(const int& x, const int& y) {
     const int sizeNeeded = x + y + 2 + x * y;
     if (x < 1 || y < 1 || sizeNeeded > maxLineSize) {
         return -1;
@@ -41,33 +56,33 @@ int TM::mult(const int& x, const int& y) {
     qstates = {0, 1, 2, 3, 4, 5, 6, 7};
     program = {
         {0, // current state
-         TM::qCmd(this, // parent
-                  std::map<wchar_t, qCmd::Cmd>{ // commands on current q state
-                                               {'1', // current symbol
-                                                TM::qCmd::Cmd{'1', // symbol to write
-                                                              Action::R, // action
-                                                              0 // next q state
-                                                             }
-                                               },
-                                               {'*', // current symbol
-                                                TM::qCmd::Cmd{'*', // symbol to write
-                                                              Action::E, // action
-                                                              1 // next q state
-                                                             }
-                                               },
-                                              }
+         TuringMachine::qCmd(
+                std::map<wchar_t, qCmd::Cmd>{ // commands on current q state
+                                             {'1', // current symbol
+                                              TuringMachine::qCmd::Cmd{'1', // symbol to write
+                                                            Action::R, // action
+                                                            0 // next q curState
+                                                           }
+                                             },
+                                             {'*', // current symbol
+                                              TuringMachine::qCmd::Cmd{'*', // symbol to write
+                                                            Action::E, // action
+                                                            1 // next q curState
+                                                           }
+                                             },
+                                            }
                  )
         },
     };
     Error e = Error::NoError;
     while (e != Error::EndOfProgram) {
-        std::wcout << program.at(state) << std::endl;
-        e = program[state].next();
+        std::wcout << printNextCmd() << std::endl;
+        e = next();
     }
     return 0;
 }
 
-TM::Error TM::move(const Action& act) {
+TuringMachine::Error TuringMachine::move(const Action& act) {
     switch (act) {
         case Action::N:
             break;
@@ -94,7 +109,7 @@ TM::Error TM::move(const Action& act) {
     return Error::NoError;
 }
 
-TM::Error TM::writeSymbol(const wchar_t& symb) {
+TuringMachine::Error TuringMachine::writeSymbol(const wchar_t& symb) {
     std::vector<wchar_t>::const_iterator ita = alphabet.cbegin();
     while (ita != alphabet.cend()) {
         if (*ita == symb) {
@@ -106,5 +121,53 @@ TM::Error TM::writeSymbol(const wchar_t& symb) {
         return Error::WrongChar;
     }
     return Error::NoError;
+}
+
+std::wstring TuringMachine::printNextCmd() const {
+    const wchar_t curSymb = tape.at(position);
+    const qCmd::Cmd cmd = program.at(curState).getCmd(curSymb);
+    std::wstring qnum;
+    unsigned int temp = curState;
+    if (temp == 0) {
+        qnum = L'\x2080';
+    } else {
+        while (temp > 0) {
+            qnum.insert(qnum.begin(), (wchar_t)(L'\x2080' + (wchar_t)(temp % 10)));
+            temp /= 10;
+        }
+    }
+    std::wstring qnextnum;
+    temp = cmd.nextState;
+    if (temp == 0) {
+        qnextnum = L'\x2080';
+    } else {
+        while (temp > 0) {
+            qnextnum.insert(qnextnum.begin(), (wchar_t)(L'\x2080' + (wchar_t)(temp % 10)));
+            temp /= 10;
+        }
+    }
+    wchar_t action = '\0';
+    switch(cmd.action) {
+        case TuringMachine::Action::N:
+            action = 'N';
+            break;
+        case TuringMachine::Action::L:
+            action = 'L';
+            break;
+        case TuringMachine::Action::R:
+            action = 'R';
+            break;
+        case TuringMachine::Action::E:
+            action = 'E';
+            break;
+    }
+    std::wstring output(L"q");
+    output.append(qnum);
+    output.push_back(curSymb);
+    output.append(L" → q");
+    output.append(qnextnum);
+    output.push_back(cmd.symbolToWrite);
+    output.push_back(action);
+    return output;
 }
 
