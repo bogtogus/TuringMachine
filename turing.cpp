@@ -14,16 +14,22 @@ TuringMachine::~TuringMachine() {
 
 TuringMachine::Error TuringMachine::execute() {
     const wchar_t curSymb = tape.at(curPosition);
-    const Cmd cmd = program.at(curState).at(curSymb);
-    if (cmd.symbolToWrite == '\0') {
-        return Error::WrongChar;
+    const qCmd qcmd = program.at(curState);
+    if (qcmd.find(curSymb) == qcmd.end()) {
+        return Error::NoError;
     }
-    Error e = writeSymbol(cmd.symbolToWrite);
-    if (e != Error::NoError) {
-        return e;
+    const Cmd cmd = qcmd.at(curSymb);
+    Error e = Error::NoError;
+    if (cmd.symbolToWrite != '\0') {
+        e = writeSymbol(cmd.symbolToWrite);
+        if (e != Error::NoError) {
+            return e;
+        }
+        e = move(cmd.action);
+        curState = cmd.nextState;
+    } else {
+        e = move(cmd.action);
     }
-    e = move(cmd.action);
-    curState = cmd.nextState;
     return e;
 }
 
@@ -45,6 +51,8 @@ TuringMachine::Error TuringMachine::move(const Action& act) {
                 tape.insert(tape.begin(), EMPTY);
             } else if (tape.size() >= maxTapeSize) {
                 return Error::Overflow;
+            } else {
+                --curPosition;
             }
             break;
         case Action::R:
@@ -73,7 +81,11 @@ TuringMachine::Error TuringMachine::writeSymbol(const wchar_t& symb) {
 
 std::wstring TuringMachine::printNextCmd() const {
     const wchar_t curSymb = tape.at(curPosition);
-    const Cmd cmd = program.at(curState).at(curSymb);
+    const qCmd qcmd = program.at(curState);
+    if (qcmd.find(curSymb) == qcmd.end()) {
+        return L"";
+    }
+    const Cmd cmd = qcmd.at(curSymb);
     std::wstring qnum;
     unsigned int temp = curState;
     if (temp == 0) {
@@ -86,6 +98,9 @@ std::wstring TuringMachine::printNextCmd() const {
     }
     std::wstring qnextnum;
     temp = cmd.nextState;
+    if (temp == -1) {
+        temp = curState;
+    }
     if (temp == 0) {
         qnextnum = L'\x2080';
     } else {
@@ -114,7 +129,11 @@ std::wstring TuringMachine::printNextCmd() const {
     output.push_back(curSymb);
     output.append(L" → q");
     output.append(qnextnum);
-    output.push_back(cmd.symbolToWrite);
+    if (cmd.symbolToWrite != '\0') {
+        output.push_back(cmd.symbolToWrite);
+    } else {
+        output.push_back(tape.at(curPosition));
+    }
     output.push_back(action);
     return output;
 }
@@ -127,6 +146,9 @@ int TuringMachine::setAlphabet(const std::vector<wchar_t>& al) {
     std::vector<wchar_t>::const_iterator it = al.cbegin();
     bool containsEmpty = false;
     while (it != al.cend()) {
+        if (*it == '\0') {
+            return -2;
+        }
         this->alphabet.insert(*it);
         if (!containsEmpty && *it == EMPTY) {
             containsEmpty = true;
@@ -162,7 +184,7 @@ int TuringMachine::setProgram(const std::map<q_, qCmd>& prg) {
         while (itcmd != itcmdend) { // check program valid
             if (alphabet.find(itcmd->first) == alphabet.end()) { // if command contains forbidden current symbol
                 return -1;
-            } else if (alphabet.find(itcmd->second.symbolToWrite) == alphabet.end()) { // if command contains forbidden symbol
+            } else if (itcmd->second.symbolToWrite != '\0' && alphabet.find(itcmd->second.symbolToWrite) == alphabet.end()) { // if command contains forbidden symbol
                 return -1;
             } else if (qstates.find(itcmd->second.nextState) == qstates.end()) { // if command contains forbidden next state
                 return -1;
@@ -222,3 +244,13 @@ int TuringMachine::run() {
 }
 
 
+TuringMachine::Cmd::Cmd(const wchar_t& s, const Action& a, const q_& n) 
+    : symbolToWrite(s), action(a), nextState(n) {
+
+}
+
+TuringMachine::Cmd::Cmd(const Action& a) 
+    : symbolToWrite('\0'), action(a), nextState(0)
+{
+
+}

@@ -24,10 +24,14 @@ class TuringMachine {
             L, // Move left
             E // End of program
         };
-        struct Cmd {
-            wchar_t symbolToWrite;
-            Action action;
-            unsigned int nextState;
+        class Cmd {
+            public:
+                wchar_t symbolToWrite;
+                Action action;
+                q_ nextState;
+                Cmd(const wchar_t& s, const Action& a, const q_& n);
+                Cmd(const Action& a);
+                ~Cmd() = default;
         };
     private:
         std::set<wchar_t> alphabet;

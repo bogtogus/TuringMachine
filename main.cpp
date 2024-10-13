@@ -17,8 +17,8 @@ int main() {
     std::locale utf8(std::locale(), new std::codecvt_utf8_utf16<wchar_t>);
     std::wcout.imbue(utf8);
     TuringMachine tm;
-    tm.setAlphabet({'1', '*', 'A', 'B', EMPTY});
-    tm.setStates(1);
+    tm.setAlphabet({'1', '*', 'A', 'B', '=', EMPTY});
+    tm.setStates(7);
     std::map<q_, qCmd> program = {
     /*   qᵢaᵢ → aₓMqₓ   */
         {0, // current state qᵢ
@@ -29,13 +29,59 @@ int main() {
                     qₓ - next state.
 
                  { aᵢ,    { aₓ,         M, qₓ}}    */
-                 {'1', Cmd{'1', Action::R, 0 }},
-                 {'*', Cmd{'*', Action::E, 1 }},
+                 {'1', Cmd{     Action::R    }},
+                 {'*', Cmd{'*', Action::L, 1 }},
+                 {EMPTY, Cmd{   Action::E    }}
          }
         },
+    /*  {qᵢ,      { aᵢ,    { aₓ,         M, qₓ}}*/
+        {1 , qCmd{{'1', Cmd{'A', Action::R, 2 }},
+                  {'A', Cmd{     Action::L    }},
+                  {EMPTY, Cmd{   Action::E    }}
+                 }
+        },
+    /*  {qᵢ,      { aᵢ,    { aₓ,         M, qₓ}}*/
+        {2 , qCmd{{'1', Cmd{     Action::R    }},
+                  {'*', Cmd{     Action::R    }},
+                  {'=', Cmd{'=', Action::L, 3 }},
+                  {'A', Cmd{     Action::R    }}
+                 }
+        },
+    /*  {qᵢ,      { aᵢ,    { aₓ,         M, qₓ}}*/
+        {3 , qCmd{{'1', Cmd{'B', Action::R, 3 }},
+                  {'=', Cmd{'=', Action::R, 4 }},
+                  {'B', Cmd{     Action::R    }}
+                 }
+        },
+    /*  {qᵢ,      { aᵢ,    { aₓ,         M, qₓ}}*/
+        {4 , qCmd{{'1', Cmd{     Action::R    }},
+                  {EMPTY, Cmd{'1', Action::L, 5 }}
+                 }
+        },
+    /*  {qᵢ,      { aᵢ,    { aₓ,         M, qₓ}}*/
+        {5 , qCmd{{'1', Cmd{     Action::L    }},
+                  {'=', Cmd{     Action::L    }},
+                  {'B', Cmd{'B', Action::L, 6 }}
+                 }
+        },
+    /*  {qᵢ,      { aᵢ,    { aₓ,         M, qₓ}}*/
+        {6 , qCmd{{'1', Cmd{'1', Action::N, 3 }},
+                  {'*', Cmd{'*', Action::R, 7 }},
+                  {'B', Cmd{     Action::L,   }}
+                 }
+        },
+    /*  {qᵢ,      { aᵢ,    { aₓ,         M, qₓ}}*/
+        {7 , qCmd{{'1', Cmd{     Action::L    }},
+                  {'*', Cmd{'*', Action::L, 1 }},
+                  {'=', Cmd{     Action::L    }},
+                  {'B', Cmd{'1', Action::R, 7 }}
+                 }
+        }
     };
     if (tm.setProgram(program) != 0) {
         std::cout << "Ошибка программирования машины!" << std::endl;
+    } else {
+        std::cout << "Размер программы " << sizeof(program) << " байт." << std::endl;
     }
     const std::wstring data = L"111*11=";
     tm.writeOnTape(data);
