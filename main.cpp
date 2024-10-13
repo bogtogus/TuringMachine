@@ -81,7 +81,15 @@ int main() {
     if (tm.setProgram(program) != 0) {
         std::cout << "Ошибка программирования машины!" << std::endl;
     } else {
-        std::cout << "Размер программы " << sizeof(program) << " байт." << std::endl;
+        int size = sizeof(program);
+        std::map<q_, qCmd>::const_iterator it = program.cbegin();
+        while(it != program.cend()) {
+            size += sizeof(it->first);
+            size += sizeof(qCmd);
+            size += it->second.size() * sizeof(TM::Cmd);
+            ++it;
+        }
+        std::cout << "Размер программы " << size << " байт." << std::endl;
     }
     const std::wstring data = L"111*11=";
     tm.writeOnTape(data);
