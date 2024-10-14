@@ -6,6 +6,10 @@
 #include <string>
 
 #define EMPTY L'λ'
+//#define NO_SUCH_FILE -1
+//#define LACK_OF_DATA -2
+//#define WRONG_DATA -3
+//#define OK 0
 typedef unsigned int q_;
 
 class TuringMachine {
@@ -57,6 +61,7 @@ class TuringMachine {
         void resetTape();
         int writeOnTape(const std::vector<wchar_t>&);
         int writeOnTape(const std::wstring&);
+        //int readConfFromFile(const std::string&);
         int run();
 };
 

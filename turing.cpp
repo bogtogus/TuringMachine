@@ -1,5 +1,6 @@
 #include "turing.h"
 #include <iostream>
+#include <fstream>
 
 TuringMachine::TuringMachine() {
     for (int i = 0; i < lineSize; i++) {
@@ -146,9 +147,14 @@ std::wstring TuringMachine::viewTape() const {
     while (viewPos < maxTapeSize && (tape.at(viewPos) == '\0' || tape.at(viewPos) == EMPTY)) {
         ++viewPos;
     }
-    leftBorder = viewPos;
-    
     output.push_back(' ');
+    if (viewPos > 0 && tape.at(viewPos - 1) != '\0') {
+        output.push_back(tape.at(viewPos - 1));
+        leftBorder = viewPos - 1;
+    } else {
+        leftBorder = viewPos;
+    }
+    
     const size_t tapeSize = tape.size();
     while (viewPos < tapeSize && tape.at(viewPos) != '\0' && tape.at(viewPos) != EMPTY) {
         output.push_back(tape.at(viewPos));
@@ -284,10 +290,84 @@ int TuringMachine::run() {
         std::wcout << viewNextCmd() << std::endl;
         e = execute();
         std::wcout << viewTape() << std::endl;
+        std::wcout << L"──────────────" << std::endl;
     }
     return 0;
 }
 
+//int TuringMachine::readConfFromFile(const std::string& path) {
+//    std::wifstream conffile;
+//    conffile.open(path, std::ios::in);
+//    if (!conffile.is_open()) {
+//        conffile.close();
+//        return NO_SUCH_FILE;
+//    }
+//    const int maxAlphabetSize = 256;
+//    std::wstring readAlphabet(maxAlphabetSize, '\0');
+//    size_t i = 0;
+//    do {
+//        conffile.get(readAlphabet[i]);
+//        if (readAlphabet.at(i) == '\0') {
+//            return WRONG_DATA;
+//        }
+//        ++i;
+//    } while(i < maxAlphabetSize && !conffile.eof() && conffile.peek() != '\n');
+//    if (conffile.eof() || i == maxAlphabetSize) {
+//        readAlphabet.clear();
+//        return LACK_OF_DATA;
+//    } else {
+//        conffile.ignore(1);
+//    }
+//    const int statesTxtMaxSize = 10;
+//    std::wstring statesTxtSize(statesTxtMaxSize, '\0');
+//    i = 0;
+//    do {
+//        conffile.get(statesTxtSize[i]);
+//        if (statesTxtSize.at(i) == '\0') {
+//            return WRONG_DATA;
+//        }
+//        ++i;
+//    } while(i < statesTxtMaxSize && !conffile.eof() && conffile.peek() != '\n');
+//    if (conffile.eof() || i == statesTxtMaxSize) {
+//        statesTxtSize.clear();
+//        readAlphabet.clear();
+//        return LACK_OF_DATA;
+//    } else {
+//        conffile.ignore(1);
+//    }
+//    int statesSize;
+//    try {
+//        statesSize = std::stoi(statesTxtSize);
+//    } catch (...) {
+//        return WRONG_DATA;
+//    }
+//    std::vector<qCmd> readProgram;
+//    qCmd current;
+//    wchar_t currSymb;
+//    int state = 0;
+//    i = 0;
+//    do {
+//        //conffile.get(currSymb); // current state
+//        //if ((int)(currSymb - L'0') < 0 || (int)(currSymb - L'0') > statesSize) {
+//        //    readProgram.clear();
+//        //    statesTxtSize.clear();
+//        //    readAlphabet.clear();
+//        //    return WRONG_DATA;
+//        //}
+//        //if (readProgram.back().find(currSymb) == std::string::npos) {
+//        //    readProgram.clear();
+//        //    statesTxtSize.clear();
+//        //    readAlphabet.clear();
+//        //    return WRONG_DATA;
+//        //} else if (currSymb != '\n') {
+//        //    readProgram.back().push_back(currSymb);
+//        //}
+//        ++i;
+//    } while(i < statesSize && !conffile.eof() && conffile.peek() != '\n');
+//    return OK;
+//}
+
+/*  ================================================ */
 
 TuringMachine::Cmd::Cmd(const wchar_t& s, const Action& a, const q_& n) 
     : symbolToWrite(s), action(a), nextState(n) {

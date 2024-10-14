@@ -2,6 +2,7 @@
 #include <locale>
 #include <codecvt>
 #include <windows.h>
+#include <filesystem>
 #include "turing.h"
 
 using TM = TuringMachine;
@@ -17,6 +18,9 @@ int main() {
     std::locale utf8(std::locale(), new std::codecvt_utf8_utf16<wchar_t>);
     std::wcout.imbue(utf8);
     TuringMachine tm;
+    //std::filesystem::path cwd = std::filesystem::current_path();
+    //std::cout << cwd << std::endl;
+    //tm.readConfFromFile("C:/Users/BOGDAN/projects/7sem/Theory of calculating processes/lab2/mult.conf");
     tm.setAlphabet({'1', '*', 'A', 'B', '=', EMPTY});
     tm.setStates(7);
     std::map<q_, qCmd> program = {
@@ -27,7 +31,7 @@ int main() {
                     aₓ - symbol to write; 
                     M - action; 
                     qₓ - next state.
-
+    
                  { aᵢ,    { aₓ,         M, qₓ}}    */
                  {'1', Cmd{     Action::R    }},
                  {'*', Cmd{'*', Action::L, 1 }},
